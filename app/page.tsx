@@ -60,7 +60,7 @@ export default function Page() {
       const result = await res.json();
       if (result.status === 'success') {
         const user = result.data;
-        user.LogoUrl = result.logo || 'https://lh3.googleusercontent.com/d/1SCvmdQxuqmX_f0gBaYt0Ob53Tws97Hnq';
+        user.LogoUrl = result.logo || 'https://lh3.googleusercontent.com/d/1VJINoN5yi1uc1pRZ5SPrM19gIS2iPhQh';
         localStorage.setItem('cbt_user', JSON.stringify(user));
         window.location.href = '/index.html';
       } else {
@@ -176,7 +176,7 @@ export default function Page() {
                 width: '100%', padding: '45px 35px', zIndex: 2
               }}>
                 <div className="text-center mb-4 pb-2 border-bottom">
-                  <img src="https://lh3.googleusercontent.com/d/1SCvmdQxuqmX_f0gBaYt0Ob53Tws97Hnq" className="mx-auto d-block mb-3 rounded-circle shadow-sm" width="85" alt="Logo UKI" style={{ border: '4px solid #fff' }} />
+                  <img src="https://lh3.googleusercontent.com/d/1VJINoN5yi1uc1pRZ5SPrM19gIS2iPhQh" className="mx-auto d-block mb-3 rounded-circle shadow-sm" width="85" alt="Logo UKI" style={{ border: '4px solid #fff' }} />
                   <h4 className="fw-bold text-center mb-3" style={{ color: '#064e3b', fontSize: '20px' }}>
                     {isRegisterMode ? 'PENDAFTARAN GURU' : 'MASUK UJIAN / DASHBOARD'}
                   </h4>
