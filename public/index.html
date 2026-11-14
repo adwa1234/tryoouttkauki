@@ -85,7 +85,7 @@
 <div id="view-dashboard" class="hidden wrapper">
     <nav id="sidebar">
         <div class="sidebar-header d-flex flex-column align-items-center justify-content-center p-4 border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
-            <div id="logo-container" class="mb-3 bg-white p-2 rounded-circle shadow-sm"><img src="https://lh3.googleusercontent.com/d/1SCvmdQxuqmX_f0gBaYt0Ob53Tws97Hnq" class="rounded-circle" width="70" alt="Logo"></div>
+            <div id="logo-container" class="mb-3 bg-white p-2 rounded-circle shadow-sm"><img src="https://lh3.googleusercontent.com/d/1VJINoN5yi1uc1pRZ5SPrM19gIS2iPhQh" class="rounded-circle" width="70" alt="Logo"></div>
             <h5 class="fw-bold mb-0 text-white text-center">UKI EDUCATION</h5>
             <small class="text-warning text-center fw-bold" id="user-role-disp"></small>
         </div>
@@ -484,7 +484,7 @@ $(document).ready(() => {
     const savedUser = localStorage.getItem('cbt_user');
     if(!savedUser) { window.location.href = '/'; return; }
     user = JSON.parse(savedUser);
-    $('#logo-container img').attr('src', user.LogoUrl || 'https://lh3.googleusercontent.com/d/1SCvmdQxuqmX_f0gBaYt0Ob53Tws97Hnq');
+    $('#logo-container img').attr('src', user.LogoUrl || 'https://lh3.googleusercontent.com/d/1VJINoN5yi1uc1pRZ5SPrM19gIS2iPhQh');
     
     initDash(); 
     
@@ -1158,7 +1158,7 @@ function downloadUserTemplate() {
 function getKopHTML(title) {
     return `
     <div class="kop" style="display: flex; align-items: center; justify-content: center; border-bottom: 4px solid #064e3b; padding-bottom: 20px; margin-bottom: 30px; position: relative; text-align: center;">
-        <img src="https://lh3.googleusercontent.com/d/1SCvmdQxuqmX_f0gBaYt0Ob53Tws97Hnq" alt="Logo KKGMI" style="width: 100px; height: 100px; position: absolute; left: 10px; top: 0;">
+        <img src="https://lh3.googleusercontent.com/d/1VJINoN5yi1uc1pRZ5SPrM19gIS2iPhQh" alt="Logo KKGMI" style="width: 100px; height: 100px; position: absolute; left: 10px; top: 0;">
         <div style="width: 100%; padding-left: 90px;">
             <h2 style="margin: 0; font-size: 26px; color: #064e3b; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">KELOMPOK KERJA GURU MADRASAH IBTIDAIYAH</h2>
             <h3 style="margin: 5px 0; font-size: 20px; color: #1e293b; font-weight: bold; letter-spacing: 2px;">(KKGMI) KOTA SURABAYA 10</h3>
@@ -1585,7 +1585,7 @@ function printKartuLogin() {
         if (u.TglLahir && typeof u.TglLahir === 'string') { tglTampil = u.TglLahir.split('-').reverse().join('-'); }
         html += `<div class="card">
             <div style="display:flex; align-items:center; border-bottom:2px solid #000; padding-bottom:5px; margin-bottom:10px;">
-                <img src="https://lh3.googleusercontent.com/d/1SCvmdQxuqmX_f0gBaYt0Ob53Tws97Hnq" style="width:50px; height:50px; margin-right:15px;">
+                <img src="https://lh3.googleusercontent.com/d/1VJINoN5yi1uc1pRZ5SPrM19gIS2iPhQh" style="width:50px; height:50px; margin-right:15px;">
                 <div><h3 style="margin:0; font-size:15px;">KARTU LOGIN CBT KKGMI</h3><p style="margin:0; font-size:11px;">KOTA SURABAYA 10</p></div>
             </div>
             <div style="display:flex; gap:15px; align-items:center;">
@@ -1623,7 +1623,7 @@ function printDaftarHadir() {
     </style></head><body>
     <div class="no-print" style="margin-bottom: 15px; text-align:right;"><button onclick="window.print()" style="padding:10px 20px; background:#0dcaf0; color:white; border:none; border-radius:5px;">Cetak Dokumen</button></div>
     <div style="display: flex; align-items: center; justify-content: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 20px; text-align: center; position: relative;">
-        <img src="https://lh3.googleusercontent.com/d/1SCvmdQxuqmX_f0gBaYt0Ob53Tws97Hnq" style="width: 80px; position: absolute; left: 10px;">
+        <img src="https://lh3.googleusercontent.com/d/1VJINoN5yi1uc1pRZ5SPrM19gIS2iPhQh" style="width: 80px; position: absolute; left: 10px;">
         <div><h2 style="margin: 0; font-size: 22px;">DAFTAR HADIR PESERTA UJIAN</h2><p style="margin: 5px 0 0;">KKGMI KOTA SURABAYA 10</p></div>
     </div>
     <h3>DAFTAR HADIR PESERTA</h3>
@@ -1658,7 +1658,7 @@ function printBeritaAcara() {
     </style></head><body>
     <div class="no-print" style="margin-bottom: 15px; text-align:right;"><button onclick="window.print()" style="padding:10px 20px; background:#198754; color:white; border:none; border-radius:5px;">Cetak Dokumen</button></div>
     <div style="display: flex; align-items: center; justify-content: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 30px; text-align: center; position: relative;">
-        <img src="https://lh3.googleusercontent.com/d/1SCvmdQxuqmX_f0gBaYt0Ob53Tws97Hnq" style="width: 80px; position: absolute; left: 20px;">
+        <img src="https://lh3.googleusercontent.com/d/1VJINoN5yi1uc1pRZ5SPrM19gIS2iPhQh" style="width: 80px; position: absolute; left: 20px;">
         <div><h2 style="margin: 0; font-size: 22px;">PANITIA PELAKSANAAN UJIAN CBT</h2><p style="margin: 5px 0 0;">KKGMI KOTA SURABAYA 10</p></div>
     </div>
     
