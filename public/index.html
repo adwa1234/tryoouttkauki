@@ -582,11 +582,62 @@ function initDash() {
     $('.components').addClass('hidden');
     
     if(role === 'siswa') { $('#menu-siswa').removeClass('hidden'); loadPage('siswa-home'); } 
-    else if(role === 'guru') { $('#menu-guru').removeClass('hidden'); loadPage('admin-home'); } 
     else if(role === 'admin') { $('#menu-admin').removeClass('hidden'); loadPage('admin-home'); } 
-    else { Swal.fire('Akses Ditolak', 'Role akun Anda tidak dikenali sistem.', 'error'); }
+    else if(role === 'guru') { 
+        showLoad(true);
+        google.script.run
+        .withSuccessHandler(res => {
+            showLoad(false);
+            if(res.status === 'success' && res.data) {
+                user.StatusApproval = res.data.statusApproval;
+                user.KuotaSiswa = res.data.kuotaSiswa || 0;
+                localStorage.setItem('cbt_user', JSON.stringify(user));
+                
+                if(user.StatusApproval === 'Pending') {
+                    renderPendingApproval();
+                } else {
+                    $('#menu-guru').removeClass('hidden'); 
+                    loadPage('admin-home');
+                }
+            }
+        })
+        .withFailureHandler(() => { showLoad(false); Swal.fire('Error', 'Gagal memuat status akun', 'error'); })
+        .getDashboardData('guru', user.ID, user.Kelas, user.Sekolah);
+    } 
+    else { Swal.fire('Akses Ditolak', 'Role akun tidak dikenali.', 'error'); }
 }
 
+function renderPendingApproval() {
+    let h = `
+    <div class="card p-5 shadow-sm text-center mx-auto mt-5 border-0" style="max-width: 600px; border-radius: 20px; background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+        <i class="fas fa-user-clock text-success mb-3" style="font-size: 4rem;"></i>
+        <h3 class="fw-bold text-success mb-3">Akun Anda Belum Aktif</h3>
+        <p class="text-muted mb-4">Untuk mengaktifkan akun dan mendapatkan akses Dashboard, silakan masukkan total jumlah siswa yang akan mengikuti Tryout Bersama, lalu konfirmasi pembayaran ke Admin.</p>
+        <div class="form-floating mb-4">
+            <input type="number" id="input-kuota" class="form-control text-center fw-bold fs-4 border-success" placeholder="Jumlah">
+            <label class="text-success">Jumlah Peserta Didik</label>
+        </div>
+        <button class="btn btn-success btn-lg w-100 fw-bold rounded-pill shadow-sm" onclick="submitKuotaPembayaran()"><i class="fab fa-whatsapp me-2"></i> Konfirmasi Pembayaran ke Admin</button>
+        <button class="btn btn-outline-danger mt-3 rounded-pill fw-bold" onclick="handleLogout()">Keluar</button>
+    </div>`;
+    $('#content-area').html(h);
+}
+
+function submitKuotaPembayaran() {
+    const jml = $('#input-kuota').val();
+    if(!jml || jml <= 0) return Swal.fire('Error', 'Masukkan jumlah siswa yang valid!', 'error');
+    
+    showLoad(true);
+    google.script.run
+    .withSuccessHandler(res => {
+        showLoad(false);
+        const waText = encodeURIComponent(`Halo Admin UKI EDUCATION, saya Guru ${user.Nama} dari ${user.Sekolah}. Saya mendaftarkan akun untuk Tryout Bersama dengan total peserta: *${jml} Siswa*. Mohon panduan pembayarannya agar akun saya bisa diaktifkan.`);
+        window.open(`https://wa.me/6285895283075?text=${waText}`, '_blank');
+        Swal.fire('Terima Kasih', 'Permintaan telah diajukan. Silakan lanjutkan obrolan di WhatsApp untuk penyelesaian pembayaran. Admin akan memproses aktivasi Anda.', 'success');
+    })
+    .withFailureHandler(err => { showLoad(false); Swal.fire('Error', err.message, 'error'); })
+    .submitQuota({ guruId: user.ID, jumlahSiswa: jml });
+}
 function appRefresh() { const activeLink = $('.nav-link.active'); if (activeLink.length > 0) { const onclickAttr = activeLink.attr('onclick'); if(onclickAttr) { const match = onclickAttr.match(/'([^']+)'/); if(match) loadPage(match[1]); } } }
 
 function loadPage(page) {
@@ -669,14 +720,28 @@ function renderUsers(users) {
         </div>`;
     }
 
+let currentSiswa = users.length;
+    let sisaKuota = user.KuotaSiswa - currentSiswa;
+    let canAdd = isAdmin || (canEdit && sisaKuota > 0);
+
+    let quotaAlert = '';
+    if (canEdit && !isAdmin) {
+        quotaAlert = `<div class="alert ${sisaKuota <= 0 ? 'alert-danger' : 'alert-info'} shadow-sm rounded-4 mb-3">
+            <i class="fas fa-info-circle me-2"></i><b>Kuota Siswa Anda:</b> Terpakai ${currentSiswa} dari total ${user.KuotaSiswa} pendaftar. ${sisaKuota <= 0 ? '(Kuota Habis)' : `(Sisa: ${sisaKuota})`}
+        </div>`;
+    }
+
     let h = `<div class="d-flex justify-content-between mb-3 flex-wrap gap-2 align-items-center">
         <div>
-            ${isAdmin ? `
+            ${isAdmin ? `<h5 class="fw-bold text-primary mb-3"><i class="fas fa-users me-2"></i>Data Seluruh Siswa (Admin)</h5>` : `<h5 class="fw-bold text-primary mb-3"><i class="fas fa-users me-2"></i>Data Siswa Anda</h5>`}
+            
+            ${canAdd ? `
             <button class="btn btn-success shadow-sm me-2 rounded-pill px-3 mb-2" onclick="$('#modalUser').modal('show');$('#modalUser form')[0].reset();$('#mu-id').val('');$('#mu-foto-b64').val('');$('#mu-sesi').val('1');"><i class="fas fa-plus me-1"></i> Tambah User</button>
             <label class="btn btn-primary shadow-sm m-0 me-2 rounded-pill px-3 mb-2"><i class="fas fa-upload me-1"></i> Upload Excel <input type="file" hidden accept=".xlsx,.xls" onchange="handleUploadUsersExcel(event)"></label>
+            ` : `<button class="btn btn-secondary shadow-sm me-2 rounded-pill px-3 mb-2 disabled" title="Kuota Pendaftaran Habis"><i class="fas fa-ban me-1"></i> Kuota Habis (Tambah/Upload)</button>`}
+            
             <button class="btn btn-outline-success shadow-sm m-0 me-2 rounded-pill px-3 mb-2" onclick="downloadUserTemplate()"><i class="fas fa-download me-1"></i> Template Excel</button>
-            <button class="btn btn-danger shadow-sm m-0 rounded-pill px-3 mb-2 fw-bold hidden" id="btn-bulk-delete-users" onclick="bulkDeleteUsers()"><i class="fas fa-trash me-1"></i> Hapus Terpilih</button>
-            ` : `<h5 class="fw-bold text-primary mb-0"><i class="fas fa-users me-2"></i>Data Siswa Anda</h5>`}
+            ${isAdmin ? `<button class="btn btn-danger shadow-sm m-0 rounded-pill px-3 mb-2 fw-bold hidden" id="btn-bulk-delete-users" onclick="bulkDeleteUsers()"><i class="fas fa-trash me-1"></i> Hapus Terpilih</button>` : ''}
             
             ${canEdit ? `
             <label class="btn btn-outline-primary shadow-sm m-0 me-2 rounded-pill px-3 mb-2" title="Nama file harus sama dengan Username (contoh: siswa01.jpg)">
@@ -687,8 +752,9 @@ function renderUsers(users) {
         </div>
     </div>
     
+    ${quotaAlert}
     ${duplicateAlert}
-    
+        
     <div class="row g-2 mb-3 p-3 bg-white rounded-4 shadow-sm border">
         <div class="col-md-4">
             <label class="small fw-bold text-muted ms-1">Cari Nama / Username</label>
@@ -815,6 +881,13 @@ function handleUploadUsersExcel(e) {
         }).filter(u => u.username !== '');
         
         if(formattedData.length === 0) return Swal.fire('Error', 'Format data tidak valid.', 'error');
+        const roleStr = String(user.Role).trim().toLowerCase();
+        if (roleStr === 'guru') {
+            let currentSiswaCount = window.allUsersData.length;
+            if (currentSiswaCount + formattedData.length > user.KuotaSiswa) {
+                return Swal.fire('Kuota Tidak Cukup', `Anda mencoba mengupload ${formattedData.length} siswa, tapi sisa kuota Anda hanya ${user.KuotaSiswa - currentSiswaCount} peserta. Hubungi Admin jika ingin menambah kuota.`, 'warning');
+            }
+        }
         
         Swal.fire({ title: `Upload ${formattedData.length} Peserta?`, icon: 'question', showCancelButton: true }).then(async r => {
             if(r.isConfirmed) {
