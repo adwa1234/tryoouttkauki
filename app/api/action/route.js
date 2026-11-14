@@ -98,7 +98,26 @@ export async function POST(req) {
         }
     }
     // =====================================
+// === FITUR PERSETUJUAN GURU ===
+    if (action === 'getPersetujuanList') {
+        try {
+            const list = await turso.execute("SELECT ID, Nama, Sekolah, NoHP, KuotaSiswa, StatusApproval FROM Users WHERE Role='guru' AND StatusApproval='Pending' ORDER BY ROWID DESC");
+            return NextResponse.json({ status: 'success', data: list.rows });
+        } catch(e) {
+            return NextResponse.json({ status: 'error', msg: e.message });
+        }
+    }
 
+    if (action === 'adminApproveGuru') {
+        const guruId = args[0];
+        try {
+            await turso.execute({ sql: "UPDATE Users SET StatusApproval = 'Approved' WHERE ID = ?", args: [guruId || ''] });
+            return NextResponse.json({ status: 'success', msg: 'Berhasil disetujui.' });
+        } catch(e) {
+            return NextResponse.json({ status: 'error', msg: e.message });
+        }
+    }
+    // ==========================================
     if (action === 'getDashboardData') {
       const [role, userId, , sekolah, filterMapel] = args; 
       let exams, users;
@@ -240,8 +259,9 @@ export async function POST(req) {
               args: [id, d.nama || '', d.username || '', d.password || '', d.role || '', d.sekolah || '', d.kelas || '', d.tglLahir || '', d.foto || '', d.sesi || ''] 
           });
         }
-      } else if (mode === 'delete') {
+     } else if (mode === 'delete') {
         await turso.execute({ sql: "DELETE FROM Users WHERE ID = ?", args: [d.id || ''] });
+        await turso.execute({ sql: "DELETE FROM Payments WHERE GuruID = ?", args: [d.id || ''] }); // Tambahan: Menghapus log order pending (jika ada)
       }
       return NextResponse.json({ status: 'success', msg: 'Data User berhasil disimpan!' });
     }
