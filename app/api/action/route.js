@@ -46,6 +46,40 @@ export async function POST(req) {
       }
     }
 
+    // === TAMBAHAN BARU UNTUK UKI EDUCATION ===
+    if (action === 'registerGuru') {
+      const d = args[0];
+      const id = 'G' + Date.now();
+      try {
+        const cek = await turso.execute({ sql: "SELECT Username FROM Users WHERE Username = ?", args: [d.username] });
+        if (cek.rows.length > 0) return NextResponse.json({ status: 'error', msg: 'Username tersebut sudah terpakai!' });
+        
+        await turso.execute({ 
+            sql: "INSERT INTO Users (ID, Nama, Username, Password, Role, Sekolah, StatusApproval, KuotaSiswa, NoHP) VALUES (?, ?, ?, ?, 'guru', ?, 'Pending', 0, ?)", 
+            args: [id, d.nama, d.username, d.password, d.sekolah, d.noHP] 
+        });
+        return NextResponse.json({ status: 'success', msg: 'Akun berhasil dibuat. Silakan Login menggunakan Username Anda.' });
+      } catch(e) {
+        return NextResponse.json({ status: 'error', msg: e.message });
+      }
+    }
+
+    if (action === 'submitQuota') {
+      const d = args[0]; // { guruId, jumlahSiswa }
+      try {
+        // Simpan kuota sementara yang diajukan (Status tetap Pending sampai di ACC Admin via database/dashboard)
+        await turso.execute({ sql: "UPDATE Users SET KuotaSiswa = ? WHERE ID = ?", args: [d.jumlahSiswa, d.guruId] });
+        // Simpan log ke tabel payment
+        await turso.execute({ 
+            sql: "INSERT INTO Payments (PaymentID, GuruID, JumlahSiswa, Tanggal) VALUES (?, ?, ?, CURRENT_TIMESTAMP)", 
+            args: ['PAY' + Date.now(), d.guruId, d.jumlahSiswa] 
+        });
+        return NextResponse.json({ status: 'success' });
+      } catch(e) {
+        return NextResponse.json({ status: 'error', msg: e.message });
+      }
+    }
+    // ==========================================
     if (action === 'getDashboardData') {
       const [role, userId, , sekolah, filterMapel] = args; 
       let exams, users;
@@ -120,7 +154,14 @@ export async function POST(req) {
             const surveys = await turso.execute("SELECT ExamID, Judul, TargetKelas, Token, ShowStats FROM Exams WHERE Mapel = 'SURVEY'");
             output.surveys = surveys.rows;
         }
-
+// MENARIK STATUS APPROVAL & KUOTA UNTUK GURU
+        if (role === 'guru') {
+            const selfData = await turso.execute({ sql: "SELECT StatusApproval, KuotaSiswa FROM Users WHERE ID = ?", args: [userId] });
+            if(selfData.rows.length > 0) {
+                output.statusApproval = selfData.rows[0].StatusApproval;
+                output.kuotaSiswa = selfData.rows[0].KuotaSiswa;
+            }
+        }
       } else if (role === 'siswa') {
         output.availableExams = exams.rows.filter(e => e.Status === 'Aktif');
         
