@@ -78,6 +78,27 @@ export async function POST(req) {
       }
     }
 
+    // === FITUR APPROVAL ADMIN (BARU) ===
+    if (action === 'getPendingApprovals') {
+        try {
+            const data = await turso.execute("SELECT ID, Nama, Username, Sekolah, KuotaSiswa, NoHP FROM Users WHERE Role='guru' AND StatusApproval='Pending'");
+            return NextResponse.json({ status: 'success', data: data.rows });
+        } catch(e) {
+            return NextResponse.json({ status: 'error', msg: e.message });
+        }
+    }
+
+    if (action === 'approveGuru') {
+        const d = args[0]; // { id, kuota }
+        try {
+            await turso.execute({ sql: "UPDATE Users SET StatusApproval = 'Approved', KuotaSiswa = ? WHERE ID = ?", args: [d.kuota, d.id] });
+            return NextResponse.json({ status: 'success', msg: 'Akun Guru Berhasil Diaktifkan!' });
+        } catch(e) {
+            return NextResponse.json({ status: 'error', msg: e.message });
+        }
+    }
+    // =====================================
+
     if (action === 'getDashboardData') {
       const [role, userId, , sekolah, filterMapel] = args; 
       let exams, users;
