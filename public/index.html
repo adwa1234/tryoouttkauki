@@ -29,16 +29,6 @@
         #sidebar ul li a { padding: 15px 25px; display: block; color: #e2e8f0; text-decoration: none; border-left: 4px solid transparent; cursor: pointer; transition: 0.2s; }
         #sidebar ul li a:hover, #sidebar ul li a.active { background: rgba(212, 175, 55, 0.1); color: #fff; border-left-color: var(--secondary); }
         
-        /* Floating WA Button */
-        .wa-float {
-            position: fixed; width: 60px; height: 60px; bottom: 40px; right: 40px;
-            background-color: #25d366; color: #FFF; border-radius: 50px;
-            text-align: center; font-size: 35px; box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
-            z-index: 10000; display: flex; align-items: center; justify-content: center;
-            text-decoration: none; transition: transform 0.3s ease;
-        }
-        .wa-float:hover { transform: scale(1.1); color: white; }
-
         /* Exam Layout */
         #view-exam { position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; z-index: 9999; background: #f8fafc; overflow: hidden; display: flex; flex-direction: column; }
         .exam-header { flex-shrink: 0; height: 60px; background: #064e3b; color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
@@ -92,10 +82,6 @@
 <div id="loader" class="loader hidden"><div class="spinner"></div></div>
 <div id="sidebar-overlay" class="overlay" onclick="toggleSidebar()"></div>
 
-<a href="https://wa.me/6285895283075?text=Halo%20Admin%20UKI%20EDUCATION,%20saya%20butuh%20bantuan%20terkait%20CBT." class="wa-float" id="wa-float" target="_blank" title="Hubungi Admin via WhatsApp">
-    <i class="fab fa-whatsapp"></i>
-</a>
-
 <div id="view-dashboard" class="hidden wrapper">
     <nav id="sidebar">
         <div class="sidebar-header d-flex flex-column align-items-center justify-content-center p-4 border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
@@ -107,6 +93,7 @@
         <!-- Menu Admin -->
         <ul class="list-unstyled components hidden" id="menu-admin">
             <li><a onclick="loadPage('admin-home')" class="nav-link active"><i class="fas fa-home me-3"></i>Dashboard</a></li>
+            <li><a onclick="loadPage('admin-persetujuan')" class="nav-link text-warning"><i class="fas fa-user-check me-3"></i>Persetujuan Guru</a></li>
             <li><a onclick="loadPage('admin-users')" class="nav-link"><i class="fas fa-users me-3"></i>Data Peserta</a></li>
             <li><a onclick="loadPage('admin-ujian')" class="nav-link"><i class="fas fa-calendar-alt me-3"></i>Bank Soal TKA</a></li>
             <li><a onclick="loadPage('admin-survey')" class="nav-link"><i class="fas fa-clipboard-check me-3"></i>Manajemen Survei</a></li>
@@ -546,9 +533,6 @@ function initDash() {
     $('#user-role-disp').text(role.toUpperCase());
     $('.components').addClass('hidden');
     
-    // Tampilkan WA saat di Dashboard
-    $('#wa-float').removeClass('hidden');
-    
     if(role === 'siswa') { $('#menu-siswa').removeClass('hidden'); loadPage('siswa-home'); } 
     else if(role === 'admin') { $('#menu-admin').removeClass('hidden'); loadPage('admin-home'); } 
     else if(role === 'guru') { 
@@ -642,7 +626,6 @@ function loadPage(page) {
     $('#page-title').text(page.replace('-', ' ').toUpperCase());
     $('.nav-link').removeClass('active'); $(`a[onclick="loadPage('${page}')"]`).addClass('active');
     if(window.innerWidth <= 768) { $('#sidebar').removeClass('active'); $('#sidebar-overlay').removeClass('active'); }
-    $('#wa-float').removeClass('hidden'); // Munculkan kembali tombol WA di menu
 
     if(page === 'admin-users') {
         showLoad(true);
@@ -650,6 +633,14 @@ function loadPage(page) {
         .withSuccessHandler(r => { showLoad(false); if(r.status === 'success') renderUsers(r.data); else Swal.fire('Error', r.msg, 'error'); })
         .withFailureHandler(err => { showLoad(false); Swal.fire('Error', err.message, 'error'); })
         .getUserList(user.Role || '', user.ID || '', user.Sekolah || '');
+        return;
+    }
+    if(page === 'admin-persetujuan') {
+        showLoad(true);
+        google.script.run
+        .withSuccessHandler(r => { showLoad(false); if(r.status === 'success') renderPersetujuanGuru(r.data); else Swal.fire('Error', r.msg, 'error'); })
+        .withFailureHandler(err => { showLoad(false); Swal.fire('Error', err.message, 'error'); })
+        .getPersetujuanList();
         return;
     }
     if(page === 'hasil-rekap') {
@@ -679,6 +670,82 @@ function loadPage(page) {
         showLoad(false); Swal.fire('Error', err.message, 'error');
     })
     .getDashboardData(user.Role || '', user.ID || '', user.Kelas || '', user.Sekolah || '');
+}
+
+// ==========================================
+// RENDER HALAMAN PERSETUJUAN GURU (KHUSUS ADMIN)
+// ==========================================
+function renderPersetujuanGuru(guruList) {
+    let h = `
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div><h5 class="fw-bold text-warning mb-0"><i class="fas fa-user-check me-2"></i>Daftar Aktivasi Guru (Menunggu)</h5>
+        <p class="small text-muted m-0">Menampilkan akun Guru yang sedang menunggu pembayaran/pengaktifan kuota.</p></div>
+    </div>
+    
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>No</th>
+                            <th class="text-start">Nama Guru</th>
+                            <th>Sekolah</th>
+                            <th>No HP / WA</th>
+                            <th>Pengajuan Kuota</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                    
+    if(guruList.length === 0) {
+        h += `<tr><td colspan="7" class="text-muted py-5"><i class="fas fa-check-circle fa-2x text-success mb-2"></i><br>Tidak ada pengajuan yang tertunda.</td></tr>`;
+    } else {
+        guruList.forEach((g, i) => {
+            let encodedGuru = encodeURIComponent(JSON.stringify(g));
+            h += `<tr>
+                <td class="text-muted">${i+1}</td>
+                <td class="text-start fw-bold text-primary">${g.Nama}</td>
+                <td>${g.Sekolah}</td>
+                <td><a href="https://wa.me/62${String(g.NoHP).replace(/^0+/, '')}" target="_blank" class="text-decoration-none text-success fw-bold"><i class="fab fa-whatsapp me-1"></i> ${g.NoHP}</a></td>
+                <td><span class="badge bg-dark fs-6 rounded-pill px-3">${g.KuotaSiswa} Siswa</span></td>
+                <td><span class="badge bg-warning text-dark px-3 rounded-pill">${g.StatusApproval}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-success rounded-pill px-3 shadow-sm me-1 fw-bold" onclick="approveGuru('${g.ID}')"><i class="fas fa-check me-1"></i> Setujui</button>
+                    <button class="btn btn-sm btn-outline-dark rounded-circle me-1" onclick="editUser('${encodedGuru}')" title="Edit Data"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-sm btn-outline-danger rounded-circle" onclick="delUser('${g.ID}', 'admin-persetujuan')" title="Hapus Guru"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`;
+        });
+    }
+    
+    h += `          </tbody>
+                </table>
+            </div>
+        </div>
+    </div>`;
+    $('#content-area').html(h);
+}
+
+function approveGuru(guruId) {
+    Swal.fire({
+        title: 'Setujui Akun Guru?',
+        text: 'Ini akan mengaktifkan akun guru beserta kuota siswanya. Pastikan pembayaran telah diterima!',
+        icon: 'question', showCancelButton: true, confirmButtonText: 'Ya, Aktifkan', confirmButtonColor: '#198754'
+    }).then(r => {
+        if(r.isConfirmed) {
+            showLoad(true);
+            google.script.run
+            .withSuccessHandler(res => {
+                showLoad(false);
+                if(res.status === 'success') { toast('success', 'Akun Guru Berhasil Diaktifkan!'); loadPage('admin-persetujuan'); }
+                else Swal.fire('Gagal', res.msg, 'error');
+            })
+            .withFailureHandler(err => { showLoad(false); Swal.fire('Error', err.message, 'error'); })
+            .adminApproveGuru(guruId);
+        }
+    })
 }
 
 function encodeImageFileAsURL(element) { let file = element.files[0]; let reader = new FileReader(); reader.onloadend = function() { $('#mu-foto-b64').val(reader.result); }; if(file) reader.readAsDataURL(file); }
@@ -1061,16 +1128,16 @@ async function bulkDeleteUsers() {
         Swal.fire('Gagal Semua', `Gagal menghapus data. Pastikan peserta yang dipilih tidak memiliki rekap nilai di menu Hasil Nilai.`, 'error');
     }
 }
-function delUser(uid) {
+function delUser(uid, returnPage = 'admin-users') {
     Swal.fire({
-        title: 'Hapus Peserta?', text: 'Data peserta ini akan dihapus secara permanen!', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Ya, Hapus!'
+        title: 'Hapus Akun Ini?', text: 'Data akan dihapus secara permanen!', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Ya, Hapus!'
     }).then((result) => {
         if (result.isConfirmed) {
             showLoad(true);
             google.script.run
             .withSuccessHandler((res) => {
                 showLoad(false);
-                if (res && res.status === 'success') { Swal.fire('Terhapus!', 'Data peserta berhasil dihapus.', 'success'); loadPage('admin-users'); } 
+                if (res && res.status === 'success') { Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success'); loadPage(returnPage); } 
                 else { Swal.fire('Gagal', res.msg || 'Gagal menghapus data.', 'error'); }
             })
             .withFailureHandler((err) => {
@@ -1669,7 +1736,7 @@ function renderContent(page) {
     const isGuru = String(user.Role).trim().toLowerCase() === 'guru';
 
     if (page === 'admin-home') {
-        // Buat Dropdown Filter Mapel
+        $('#wa-float').addClass('hidden'); // Sembunyikan WA saat di home dashboard
         let mapelOptions = `<option value="ALL" ${gData.currentMapelFilter === 'ALL' ? 'selected' : ''}>Gabungan Semua Mapel</option>`;
         if (gData.uniqueMapels && gData.uniqueMapels.length > 0) {
             gData.uniqueMapels.forEach(m => {
@@ -1703,7 +1770,6 @@ function renderContent(page) {
             schoolTable += `<tr><td colspan="3" class="text-muted">Belum ada data nilai untuk kategori ini.</td></tr>`;
         }
         schoolTable += `</tbody></table></div></div>`;
-        // TAMBAHAN: Tabel Ringkasan Peserta Per Sekolah
         let schoolSummaryTable = `<div class="table-responsive"><table class="table table-sm table-hover text-center"><thead><tr class="table-light"><th class="text-start">Sekolah</th><th>Total Peserta</th></tr></thead><tbody>`;
         if (gData.schoolSummary && gData.schoolSummary.length > 0) {
             gData.schoolSummary.forEach(s => {
@@ -1760,7 +1826,6 @@ function renderContent(page) {
                 <div class="col-md-6"><div class="card p-4 shadow-sm border-0 rounded-4" style="background: linear-gradient(135deg, #d4af37, #b48500); color: white;"><div class="d-flex justify-content-between align-items-center"><div><h1 class="fw-bold display-4 m-0">${gData.stats.totalUjian}</h1><p class="m-0 fs-5">Total Ujian Aktif</p></div><i class="fas fa-folder-open fa-4x opacity-50"></i></div></div></div>
              </div>
              
-<!-- Layout 2 Kolom untuk Peringkat dan Ringkasan -->
              <div class="row g-4">
                 <div class="col-md-7">
                     <div class="card shadow-sm border-0 rounded-4 h-100">
@@ -1782,30 +1847,19 @@ function renderContent(page) {
     }
         
     else if (page === 'admin-ujian') {
+        $('#wa-float').addClass('hidden');
         isSurveyMode = false;
         
-        // FILTER UNTUK GURU: Sembunyikan ujian yang waktu mulainya belum tiba ATAU bukan untuk kelasnya
         let examsToRender = gData.exams;
         if (isGuru) {
             const now = Date.now();
             examsToRender = examsToRender.filter(e => {
-                // 1. Cek Waktu Aktif (StartDate)
                 let isTimeValid = true;
-                if (e.StartDate) {
-                    const tStart = new Date(e.StartDate).getTime();
-                    isTimeValid = now >= tStart; 
-                }
-                
-                // 2. Cek Kesesuaian Kelas (TargetKelas vs Kelas Guru)
+                if (e.StartDate) { const tStart = new Date(e.StartDate).getTime(); isTimeValid = now >= tStart; }
                 let matchClass = false;
                 let tKelas = String(e.TargetKelas || '').trim().toLowerCase();
                 let uKelas = String(user.Kelas || '').trim().toLowerCase();
-                
-                // Izinkan jika target = 'all', 'semua', kosong, sama dengan kelas guru, atau mengandung kelas guru
-                if (tKelas === 'all' || tKelas === 'semua' || tKelas === '' || tKelas === uKelas || tKelas.includes(uKelas)) {
-                    matchClass = true;
-                }
-
+                if (tKelas === 'all' || tKelas === 'semua' || tKelas === '' || tKelas === uKelas || tKelas.includes(uKelas)) { matchClass = true; }
                 return isTimeValid && matchClass;
             });
         }
@@ -1848,6 +1902,7 @@ function renderContent(page) {
         h += '</div>';
     }
     else if (page === 'admin-survey') {
+        $('#wa-float').addClass('hidden');
         isSurveyMode = true;
         let surveys = gData.surveys || [];
         h = `<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
@@ -1865,6 +1920,7 @@ function renderContent(page) {
         h += '</div>';
     }
     else if (page === 'siswa-home') {
+        $('#wa-float').addClass('hidden');
         const mySesi = gData.userSesi || '1';
         const globalSesi = gData.sesiAktif || '1';
         const isSesiValid = (globalSesi === 'ALL' || String(mySesi) === String(globalSesi));
@@ -1876,23 +1932,14 @@ function renderContent(page) {
                 let matchClass = false;
                 let tKelas = String(e.TargetKelas || '').trim().toLowerCase();
                 let uKelas = String(user.Kelas || '').trim().toLowerCase();
-                
-                if (tKelas === 'all' || tKelas === 'semua' || tKelas === '' || tKelas === uKelas || tKelas.includes(uKelas)) {
-                    matchClass = true;
-                }
-
+                if (tKelas === 'all' || tKelas === 'semua' || tKelas === '' || tKelas === uKelas || tKelas.includes(uKelas)) { matchClass = true; }
                 let isTimeValid = true;
                 if (e.StartDate && e.EndDate) {
                     const tStart = new Date(e.StartDate).getTime();
                     const tEnd = new Date(e.EndDate).getTime();
-                    if (now < tStart || now > tEnd) {
-                        isTimeValid = false;
-                    }
+                    if (now < tStart || now > tEnd) { isTimeValid = false; }
                 }
-
-                if (matchClass && isTimeValid) {
-                    validExams.push(e);
-                }
+                if (matchClass && isTimeValid) { validExams.push(e); }
             });
         }
 
@@ -1908,10 +1955,8 @@ function renderContent(page) {
         else {
             validExams.forEach(e => {
                 let btnState = '', btnText = '<i class="fas fa-play-circle me-2"></i> MULAI UJIAN', btnClass = 'btn-primary';
-                
                 if (e.IsFinished) { btnState = 'disabled'; btnText = '<i class="fas fa-check me-2"></i> SUDAH DIKERJAKAN'; btnClass = 'btn-secondary'; }
                 else if (!isSesiValid) { btnState = 'disabled'; btnText = '<i class="fas fa-lock me-2"></i> SESI BELUM AKTIF'; btnClass = 'btn-secondary'; }
-
                 h += `<div class="col-md-6 col-lg-4"><div class="card h-100 shadow-sm border-0 rounded-4 overflow-hidden transition-hover"><div class="card-body p-4 text-center"><span class="badge bg-light text-primary border border-primary px-3 py-2 rounded-pill mb-3 fw-bold">${e.Mapel}</span><h5 class="fw-bold text-dark mb-3">${e.Judul}</h5><p class="small text-muted mb-4"><i class="fas fa-stopwatch me-1"></i> Waktu TKA: <b>${e.Durasi} Menit</b></p><button class="btn ${btnClass} w-100 py-2 fw-bold rounded-pill shadow-sm" onclick="startExam('${e.ExamID}')" ${btnState}>${btnText}</button></div></div></div>`;
             });
         }
@@ -1921,16 +1966,9 @@ function renderContent(page) {
             h += `<div class="table-responsive bg-white rounded-4 shadow-sm p-3 border"><table class="table table-hover align-middle mb-0"><thead><tr><th>Tanggal & Waktu</th><th>Nama Ujian</th><th>Nilai Akhir</th><th>Status / Aksi Lanjutan</th></tr></thead><tbody>`;
             gData.history.forEach(r => { 
                 let displayNilai = (r.ShowStats === 'Yes') ? `<span class="badge bg-success fs-6 shadow-sm px-3 rounded-pill">${r.Nilai}</span>` : `<span class="badge bg-secondary fs-6 shadow-sm px-3 rounded-pill"><i class="fas fa-lock"></i> Rahasia</span>`;
-                                let actions = '';
-                
-                if(r.AllowDownloadQ === 'Yes') {
-                    actions += `<button class="btn btn-sm btn-outline-info me-2 mt-1 rounded-pill px-3 shadow-sm" onclick="dlSiswaSoal('${r.ExamID}')"><i class="fas fa-file-alt me-1"></i> Soal PDF</button>`;
-                }
-                
-                if(r.ShowStats !== 'No' && r.ShowStats !== 'Tidak') {
-                    actions += `<button class="btn btn-sm btn-success me-2 mt-1 rounded-pill px-3 shadow-sm" onclick="dlSiswaHasil('${r.ResultID}')"><i class="fas fa-file-pdf me-1"></i> Hasil PDF</button>`;
-                }
-                
+                let actions = '';
+                if(r.AllowDownloadQ === 'Yes') { actions += `<button class="btn btn-sm btn-outline-info me-2 mt-1 rounded-pill px-3 shadow-sm" onclick="dlSiswaSoal('${r.ExamID}')"><i class="fas fa-file-alt me-1"></i> Soal PDF</button>`; }
+                if(r.ShowStats !== 'No' && r.ShowStats !== 'Tidak') { actions += `<button class="btn btn-sm btn-success me-2 mt-1 rounded-pill px-3 shadow-sm" onclick="dlSiswaHasil('${r.ResultID}')"><i class="fas fa-file-pdf me-1"></i> Hasil PDF</button>`; }
                 h += `<tr><td class="text-muted small">${r.WaktuSubmit}</td><td><div class="fw-bold text-dark">${r.Judul}</div></td><td>${displayNilai}</td><td><div class="d-flex flex-wrap align-items-center"><span class="badge bg-primary px-3 py-2 rounded-pill me-3 shadow-sm"><i class="fas fa-check me-1"></i> Selesai TKA</span> ${actions}</div></td></tr>`; 
             });
             h += `</tbody></table></div>`;
