@@ -120,7 +120,7 @@ export default function Page() {
       `}</style>
 
       {/* FLOATING WHATSAPP BUTTON (HANYA DI SINI) */}
-      <a href="https://wa.me/6285895283075?text=Halo%20Admin%20UKI%20EDUCATION,%20saya%20butuh%20bantuan%20pendaftaran%20CBT." className="wa-float" target="_blank" rel="noopener noreferrer" title="Hubungi Admin">
+      <a href="https://wa.me/6282332212338?text=Halo%20Admin%20UKI%20EDUCATION,%20saya%20butuh%20bantuan%20pendaftaran%20CBT." className="wa-float" target="_blank" rel="noopener noreferrer" title="Hubungi Admin">
           <i className="fab fa-whatsapp"></i>
       </a>
 
