@@ -611,7 +611,7 @@ function submitKuotaPembayaran() {
     .withSuccessHandler(res => {
         showLoad(false);
         const waText = encodeURIComponent(`Halo Admin UKI EDUCATION, saya Guru ${user.Nama} dari ${user.Sekolah}. Saya mendaftarkan akun untuk Tryout Bersama dengan total peserta: *${jml} Siswa*. Mohon panduan pembayarannya agar akun saya bisa diaktifkan.`);
-        window.open(`https://wa.me/6285895283075?text=${waText}`, '_blank');
+        window.open(`https://wa.me/6282332212338?text=${waText}`, '_blank');
         Swal.fire('Terima Kasih', 'Permintaan telah diajukan. Silakan lanjutkan obrolan di WhatsApp untuk penyelesaian pembayaran. Admin akan memproses aktivasi Anda.', 'success');
     })
     .withFailureHandler(err => { showLoad(false); Swal.fire('Error', err.message, 'error'); })
