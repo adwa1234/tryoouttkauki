@@ -130,7 +130,7 @@ export async function POST(req) {
         users = await turso.execute("SELECT ID, Sekolah FROM Users WHERE Role = 'siswa'");
       }
       
-      let output = { logo: 'https://lh3.googleusercontent.com/d/1SCvmdQxuqmX_f0gBaYt0Ob53Tws97Hnq' };
+      let output = { logo: 'https://lh3.googleusercontent.com/d/1VJINoN5yi1uc1pRZ5SPrM19gIS2iPhQh' };
       
       try {
         const settings = await turso.execute("SELECT KeyName, KeyValue FROM Settings WHERE KeyName IN ('SesiAktif', 'JamSesi1', 'JamSesi2', 'JamSesi3')");
@@ -228,7 +228,7 @@ export async function POST(req) {
         exams = await turso.execute("SELECT * FROM Exams");
         users = await turso.execute("SELECT * FROM Users WHERE Role = 'siswa'");
       }
-      return NextResponse.json({ status: 'success', exams: exams.rows, users: users.rows, logo: 'https://lh3.googleusercontent.com/d/1SCvmdQxuqmX_f0gBaYt0Ob53Tws97Hnq' });
+      return NextResponse.json({ status: 'success', exams: exams.rows, users: users.rows, logo: 'https://lh3.googleusercontent.com/d/1VJINoN5yi1uc1pRZ5SPrM19gIS2iPhQh' });
     }
 
     if (action === 'getUserList') {
